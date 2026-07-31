@@ -1,0 +1,11 @@
+# Root .gitignore
+node_modules/
+.next/
+__pycache__/
+*.pyc
+*.duckdb
+*.duckdb.wal
+.env
+
+*.duckdb
+*.duckdb.wal
