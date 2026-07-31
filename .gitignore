@@ -4,7 +4,7 @@ frontend/.next/
 frontend/out/
 
 # Python virtual environment & cache
-backend/venv/
+venv/
 __pycache__/
 *.pyc
 
@@ -20,3 +20,7 @@ __pycache__/
 # DuckDB files
 *.duckdb
 *.duckdb.wal
+
+#Data files
+*.parquet
+data/raw/
