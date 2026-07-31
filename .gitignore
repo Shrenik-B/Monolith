@@ -22,5 +22,4 @@ __pycache__/
 *.duckdb.wal
 
 #Data files
-*.parquet
 data/raw/
