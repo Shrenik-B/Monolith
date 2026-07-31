@@ -9,7 +9,7 @@ from app.data.processing.align import (
 )
 
 from app.data.ingestion.yahoo import load_parquet as load_yahoo
-from app.data.ingestion.fred import load_parquet as load_fred
+from app.data.ingestion.fred import load_fred_parquet as load_fred
 from app.data.ingestion.gpr import load_gpr_parquet as load_gpr
 
 
@@ -18,6 +18,9 @@ LOADERS = {
     "fred": load_fred,
     "gpr": load_gpr,
 }
+
+from app.paths import RAW_DATA_DIR
+from app.paths import PROCESSED_DATA_DIR
 
 
 class FeatureStore:
@@ -30,17 +33,17 @@ class FeatureStore:
         loader = LOADERS[indicator["loader"]]
 
         if indicator["loader"] == "yahoo":
-            path = f"data/raw/yahoo/{indicator['ticker']}.parquet"
+            path = RAW_DATA_DIR / "yahoo" / f"{indicator['ticker']}.parquet"
 
         elif indicator["loader"] == "fred":
-            path = f"data/raw/fred/{indicator['series']}.parquet"
+            path = RAW_DATA_DIR / "fred" / f"{indicator['series']}.parquet"
 
         elif indicator["loader"] == "gpr":
 
             if indicator["frequency"] == "daily":
-                path = "data/raw/gpr/daily.parquet"
+                path = RAW_DATA_DIR / "gpr" / "daily.parquet"
             else:
-                path = "data/raw/gpr/monthly.parquet"
+                path = RAW_DATA_DIR / "gpr" / "monthly.parquet"
 
         else:
             raise ValueError("Unknown loader.")
@@ -76,7 +79,7 @@ class FeatureStore:
         master_index = build_master_index(master)
 
         feature_frames = []
-
+        
         for indicator in FEATURES.values():
 
             df = self.load_indicator(indicator)
@@ -93,12 +96,31 @@ class FeatureStore:
             feature_frames.append(df)
 
         self.features = merge_features(feature_frames)
+        # Composite features
+        self.features["yield_curve"] = (
+            self.features["10y"] - self.features["2y"]
+        )
+
+        self.features["credit_spread"] = (
+            self.features["baa"] - self.features["10y"]
+        )
+
+        # Optional: remove raw columns if Engineer 2 doesn't need them
+        self.features = self.features.drop(
+            columns=["10y", "2y", "baa"]
+        )
+
+        # Remove all rows containing NaNs
+        self.features = self.features.dropna()
 
         return self.features
 
-    def save(
-        self,
-        filepath: str = "data/processed/features_v1.parquet"
-    ):
+    def save(self):
+
+        PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        filepath = PROCESSED_DATA_DIR / "features_v1.parquet"
 
         self.features.to_parquet(filepath)
+
+        print(f"Saved to {filepath}")

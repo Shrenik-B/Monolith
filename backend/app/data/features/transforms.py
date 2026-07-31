@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np 
 
 def pct_change(df : pd.DataFrame, periods : int = 1) -> pd.DataFrame:
-    return df.pct_change(periods=periods)
+    return df.pct_change(
+                periods=periods,
+                fill_method=None
+            )
 
 def log_returns(df: pd.DataFrame) -> pd.DataFrame:
     return np.log(df / df.shift(1))

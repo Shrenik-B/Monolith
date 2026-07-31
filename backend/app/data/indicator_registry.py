@@ -122,15 +122,15 @@ FEATURES = {
         "output": "retail_sales_z"
     },
 
-    "pmi": {
-        "loader": "fred",
-        "series": "NAPM",
-        "frequency": "monthly",
-        "pipeline": [
-            ("rolling_zscore", {"window": 120})
-        ],
-        "output": "pmi_z"
-    },
+    # "pmi": {
+    #     "loader": "fred",
+    #     "series": "NAPM",
+    #     "frequency": "monthly",
+    #     "pipeline": [
+    #         ("rolling_zscore", {"window": 120})
+    #     ],
+    #     "output": "pmi_z"
+    # },
 
     # ======================================================
     # LABOUR
@@ -218,14 +218,14 @@ FEATURES = {
     # SENTIMENT / RISK
     # ======================================================
 
-    "epu": {
-        "loader": "epu",
-        "frequency": "monthly",
-        "pipeline": [
-            ("rolling_zscore", {"window": 120})
-        ],
-        "output": "epu_z"
-    },
+    # "epu": {
+    #     "loader": "epu",
+    #     "frequency": "monthly",
+    #     "pipeline": [
+    #         ("rolling_zscore", {"window": 120})
+    #     ],
+    #     "output": "epu_z"
+    # },
 
     "gpr_monthly": {
         "loader": "gpr",
