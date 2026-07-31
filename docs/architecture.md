@@ -1,264 +1,457 @@
-# Database Schema (v1)
+# System Architecture
 
 **Project:** Monolith
 
----
-
-# Overview
-
-The system uses three storage layers:
-
-| Storage | Purpose |
-|----------|---------|
-| DuckDB + Parquet | Historical market & macro feature data |
-| PostgreSQL | Application metadata, reports, notes |
-| Qdrant | Vector embeddings for semantic search |
-
-Raw market and macroeconomic time series are **not** stored in PostgreSQL.
+Version: v1
 
 ---
 
-# PostgreSQL Tables
-
-## daily_notes
-
-Stores generated daily macro reports.
-
-| Column | Type | Description |
-|---------|------|-------------|
-| id | UUID | Primary Key |
-| date | DATE | Report date |
-| regime | VARCHAR | Assigned regime |
-| confidence | FLOAT | HMM confidence |
-| changed | BOOLEAN | Whether regime changed |
-| summary | TEXT | Executive summary |
-| created_at | TIMESTAMP | Creation timestamp |
-
----
-
-## daily_note_sources
-
-Stores citations used in each report.
-
-| Column | Type |
-|---------|------|
-| id | UUID |
-| note_id | UUID (FK) |
-| source | TEXT |
-| page | INTEGER |
-| quote | TEXT |
-
----
-
-## regime_history
-
-Stores every historical regime assignment.
-
-| Column | Type |
-|---------|------|
-| date | DATE (PK) |
-| regime_id | INTEGER |
-| regime_name | VARCHAR |
-| confidence | FLOAT |
-
----
-
-## scenario_runs
-
-Stores scenario simulator executions.
-
-| Column | Type |
-|---------|------|
-| id | UUID |
-| created_at | TIMESTAMP |
-| scenario | JSONB |
-| results | JSONB |
-
----
-
-## analogue_searches
-
-Stores historical analogue searches.
-
-| Column | Type |
-|---------|------|
-| id | UUID |
-| created_at | TIMESTAMP |
-| parameters | JSONB |
-| matches | JSONB |
-
----
-
-## model_metadata
-
-Stores trained model information.
-
-| Column | Type |
-|---------|------|
-| model_name | VARCHAR |
-| version | VARCHAR |
-| trained_until | DATE |
-| created_at | TIMESTAMP |
-| parameters | JSONB |
-
----
-
-## feature_versions
-
-Tracks feature store versions.
-
-| Column | Type |
-|---------|------|
-| version | VARCHAR |
-| created_at | TIMESTAMP |
-| description | TEXT |
-
----
-
-# DuckDB
-
-DuckDB is the analytical database.
-
-No application metadata is stored here.
-
----
-
-## Raw Tables
-
-Example
+# High-Level Architecture
 
 ```
-spy_prices
 
-date
-
-open
-
-high
-
-low
-
-close
-
-volume
-```
-
-Each market series has its own table or Parquet file.
-
----
-
-## Processed Tables
-
-Primary dataset
-
-```
-features_v1
-```
-
-Contains
-
-```
-date
-
-inflation_z
-
-core_inflation_z
-
-...
-
-gpr_z
-```
-
-This is the only dataset consumed by the quant models.
-
----
-
-# Qdrant Collections
-
-## macro_documents
-
-Stores embeddings for
-
-- FOMC Minutes
-- IMF Reports
-- ECB Publications
-- BIS Papers
-- Federal Reserve Speeches
-- Research Papers
-
-Payload
-
-```json
-{
-    "title":"",
-    "date":"",
-    "source":"",
-    "page":12,
-    "chunk":"..."
-}
-```
-
----
-
-## daily_note_embeddings
-
-Optional future collection.
-
-Stores embeddings of generated daily notes.
-
----
-
-# Relationships
-
-daily_notes
+                    User
 
 ↓
 
-daily_note_sources
-
----
-
-regime_history
+Next.js Frontend
 
 ↓
 
-daily_notes
-
----
-
-model_metadata
+FastAPI Backend
 
 ↓
 
-regime_history
+Service Layer
+
+↓
+
+┌──────────────────────────────────────────────┐
+
+│ Feature Store │ HMM │ DTW │ Scenario │ Search │
+
+└──────────────────────────────────────────────┘
+
+↓
+
+DuckDB | PostgreSQL | Qdrant
+
+↓
+
+Raw Data Pipeline
+
+↓
+
+Yahoo Finance
+FRED
+ALFRED
+EPU
+GPR
+
+```
 
 ---
 
-feature_versions
+# System Components
+
+## 1. Data Ingestion
+
+Responsible for downloading raw data.
+
+Sources
+
+- Yahoo Finance
+- FRED
+- ALFRED
+- EPU
+- GPR
+
+Output
+
+```
+data/raw/
+```
+
+---
+
+## 2. Feature Engineering
+
+Converts raw data into normalized macro features.
+
+Responsibilities
+
+- Cleaning
+- Alignment
+- Forward filling
+- Transformations
+- Validation
+
+Output
+
+```
+features_v1.parquet
+```
+
+---
+
+## 3. Feature Store
+
+Provides a single source of truth.
+
+Responsibilities
+
+- Load
+- Save
+- Validate
+- Latest snapshot
+- Historical windows
+
+Consumed by
+
+- HMM
+- DTW
+- Scenario Simulator
+
+---
+
+## 4. HMM Engine
+
+Responsibilities
+
+- Train
+- Infer
+- Predict regime probabilities
+- Transition matrix
+
+Consumes
+
+```
+features_v1.parquet
+```
+
+Produces
+
+```
+Current regime
+
+Confidence
+
+Transition probabilities
+```
+
+---
+
+## 5. DTW Engine
+
+Responsibilities
+
+- Historical analogue search
+- Similarity scoring
+
+Consumes
+
+```
+features_v1.parquet
+```
+
+Produces
+
+```
+Ranked historical matches
+```
+
+---
+
+## 6. Scenario Engine
+
+Uses historical analogues to estimate
+
+- Return distributions
+- Historical outcomes
+
+Consumes
+
+- DTW
+- HMM
+
+---
+
+## 7. RAG Engine
+
+Responsibilities
+
+- Semantic retrieval
+- Literature search
+- Evidence lookup
+
+Uses
+
+Qdrant
+
+---
+
+## 8. Daily Note Generator
+
+Inputs
+
+- HMM
+- DTW
+- Scenario
+- RAG
+
+Produces
+
+Daily macro report
+
+Stores
+
+PostgreSQL
+
+---
+
+## 9. FastAPI
+
+Acts as orchestration layer.
+
+Responsibilities
+
+- Validate requests
+- Call services
+- Return JSON
+
+Contains **no business logic**.
+
+---
+
+## 10. Next.js Frontend
+
+Responsibilities
+
+Dashboard
+
+Charts
+
+Regime Timeline
+
+Historical Analogues
+
+Scenario Simulator
+
+Daily Notes
+
+Search
+
+---
+
+# Data Flow
+
+```
+
+Yahoo / FRED / ALFRED
+
+↓
+
+Raw Parquet
+
+↓
+
+Cleaning
+
+↓
+
+Alignment
+
+↓
+
+Transformations
+
+↓
+
+Validation
 
 ↓
 
 features_v1.parquet
 
+↓
+
+┌──────────┬──────────┬─────────────┐
+
+│ HMM │ DTW │ Scenario │
+
+└──────────┴──────────┴─────────────┘
+
+↓
+
+Daily Note Generator
+
+↓
+
+FastAPI
+
+↓
+
+Next.js
+
+↓
+
+User
+
+```
+
 ---
 
-# Data Ownership
+# Folder Responsibilities
+
+```
+
+backend/
+
+app/
+
+api/
+
+services/
+
+models/
+
+core/
+
+data/
+
+quant/
+
+rag/
+
+tests/
+
+```
+
+---
+
+# Dependency Rules
+
+Allowed
+
+```
+
+API
+
+↓
+
+Services
+
+↓
+
+Feature Store
+
+↓
 
 DuckDB
 
-- Raw market data
-- Raw macro data
-- Feature store
+```
 
-PostgreSQL
+Allowed
 
-- Metadata
-- Reports
-- Regime history
-- Scenarios
+```
 
-Qdrant
+API
 
-- Vector search
-- Literature
-- Semantic retrieval
+↓
+
+Services
+
+↓
+
+Quant
+
+```
+
+Not Allowed
+
+```
+
+Frontend
+
+↓
+
+DuckDB
+
+```
+
+Not Allowed
+
+```
+
+Frontend
+
+↓
+
+HMM
+
+```
+
+Not Allowed
+
+```
+
+Quant
+
+↓
+
+Frontend
+
+```
+
+All communication goes through the service layer.
+
+---
+
+# Design Principles
+
+1. Single source of truth for features.
+2. Separation of concerns.
+3. Stateless APIs.
+4. Reproducible model training.
+5. Point-in-time correctness.
+6. Modular architecture.
+7. Independent testing of every component.
+8. Clear ownership between developers.
+
+---
+
+# Ownership
+
+Developer 1
+
+- Data ingestion
+- Feature engineering
+- DuckDB
+- Feature Store
+
+Developer 2
+
+- HMM
+- DTW
+- Scenario Engine
+- Validation
+
+Developer 3
+
+- FastAPI
+- Next.js
+- PostgreSQL
+- Qdrant
+- Deployment
+
+---
+
+# Future Extensions
+
+- Multi-country macro regimes
+- Portfolio optimization
+- Reinforcement learning allocation
+- Agentic research assistant
+- Live streaming data
+- User authentication
+- Alerting and notifications
