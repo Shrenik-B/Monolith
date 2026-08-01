@@ -1,27 +1,38 @@
+# Node dependencies & build outputs
+node_modules/
+frontend/.next/
+frontend/out/
+
 # Python cache & compiled files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+*.pyc
+backend/venv/
 
 # Environment files
 .env
+.env.local
 .venv
 venv/
 ENV/
 env.bak/
 venv.bak/
 
-# IDE files
+# IDE & System files
 .vscode/
 .idea/
 *.swp
 *.swo
+.DS_Store
 
 # Timestamped model checkpoints (keep primary model.pkl & model_metadata.json)
 model_20*.pkl
 
-# Logs & temp files
+# DuckDB & Log files
+*.duckdb
+*.duckdb.wal
 *.log
-.DS_Store
+

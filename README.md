@@ -44,6 +44,33 @@ This system processes **5,525 trading days (2003–2026)** across **17 macroecon
 
 ---
 
+## 🛠️ Quick Start & Execution
+
+### 1. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Run the End-to-End Pipeline
+```bash
+python pipeline.py
+```
+
+### 3. Launch the Streamlit Intelligence Dashboard
+```bash
+streamlit run app.py
+```
+
+### 4. Run the Evaluation & Testing Suite
+To execute temporal Train/Val/Test validation, walk-forward testing, or K-Means++ initialization tests:
+```bash
+python tests/evaluate.py
+python tests/backtest.py
+python tests/kmean.py
+```
+
+---
+
 ## 🏗️ System Architecture & Workflow
 
 ```text
@@ -162,3 +189,7 @@ python tests/evaluate.py
 python tests/backtest.py
 python tests/kmean.py
 ```
+=======
+# Monolith
+--
+>>>>>>> origin/model

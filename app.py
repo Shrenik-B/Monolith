@@ -16,11 +16,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-import load
-import predict
-import dtw_engine
-import ai_analyst
-import config
+from backend.app.quant.regime import load, predict
+from backend.app.quant.analogue import dtw_engine
+from backend.app.services import ai_analyst
+from backend.app.core import config
 
 # Dev-only module auto-reload gate
 if os.getenv("APP_ENV") == "dev":
@@ -29,10 +28,10 @@ if os.getenv("APP_ENV") == "dev":
     importlib.reload(dtw_engine)
     importlib.reload(ai_analyst)
 
-from load import retrieve_features
-from predict import HMMPredictor, get_regime_name
-from dtw_engine import DTWEngine
-from ai_analyst import generate_ai_market_commentary
+from backend.app.quant.regime.load import retrieve_features
+from backend.app.quant.regime.predict import HMMPredictor, get_regime_name
+from backend.app.quant.analogue.dtw_engine import DTWEngine
+from backend.app.services.ai_analyst import generate_ai_market_commentary
 
 # ==============================================================================
 # PAGE CONFIG
