@@ -1,0 +1,27 @@
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment files
+.env
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Timestamped model checkpoints (keep primary model.pkl & model_metadata.json)
+model_20*.pkl
+
+# Logs & temp files
+*.log
+.DS_Store
