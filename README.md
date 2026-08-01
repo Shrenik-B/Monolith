@@ -1,4 +1,4 @@
-# 📈 Market Regime Intelligence — Version 1 (Production MVP)
+# 📈 Monolith — Version 1 (Production MVP)
 
 A production-grade **macroeconomic market regime detection, transition forecasting, and historical similarity dashboard** powered by a Gaussian Hidden Markov Model (HMM), K-Means++ initialization, Dynamic Time Warping (DTW) trajectory search, and an AI Market Analyst synthesis engine.
 
