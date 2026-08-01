@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Allow dev connections from localhost and your network IP
+  allowedDevOrigins: ['localhost', '10.238.51.249'],
 };
 
 export default nextConfig;

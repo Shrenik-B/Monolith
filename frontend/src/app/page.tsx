@@ -10,18 +10,20 @@ export default function Home() {
   const [errorDetails, setErrorDetails] = useState<string>('');
 
   const checkBackendConnection = async () => {
-    setStatus('loading');
-    setErrorDetails('');
-    try {
-      // Connects directly to your FastAPI backend running on port 8000
-      const response = await axios.get('http://localhost:8000/api/test');
-      setMessage(response.data.message || JSON.stringify(response.data));
-      setStatus('success');
-    } catch (err: any) {
-      setStatus('error');
-      setErrorDetails(err.message || 'Failed to reach FastAPI server');
-    }
-  };
+  setStatus('loading');
+  setErrorDetails('');
+  try {
+    // Dynamically uses whatever hostname loaded the page (e.g. 192.168.1.15 or localhost)
+    const hostname = window.location.hostname;
+    const response = await axios.get(`http://${hostname}:8000/api/test`);
+    
+    setMessage(response.data.message || JSON.stringify(response.data));
+    setStatus('success');
+  } catch (err: any) {
+    setStatus('error');
+    setErrorDetails(err.message || 'Failed to reach FastAPI server');
+  }
+};
 
   useEffect(() => {
     checkBackendConnection();
