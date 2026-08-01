@@ -1,11 +1,22 @@
-# Root .gitignore
+# Node dependencies & build outputs
 node_modules/
-.next/
+frontend/.next/
+frontend/out/
+
+# Python virtual environment & cache
+backend/venv/
 __pycache__/
 *.pyc
-*.duckdb
-*.duckdb.wal
-.env
 
+# IDEs & System files
+.vscode/
+.idea/
+.DS_Store
+
+# Local environment variables
+.env
+.env.local
+
+# DuckDB files
 *.duckdb
 *.duckdb.wal

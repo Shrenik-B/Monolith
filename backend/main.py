@@ -13,6 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize database tables when FastAPI starts
 @app.on_event("startup")
 def startup_event():
     init_db()

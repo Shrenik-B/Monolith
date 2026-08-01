@@ -5,16 +5,18 @@ DB_FILE = "monolith.duckdb"
 
 def get_db_connection():
     """
-    Returns a connection to the monolith.duckdb file on disk.
-    Creates the file automatically if it doesn't exist.
+    Connects to the DuckDB file on disk.
+    If monolith.duckdb doesn't exist, DuckDB creates it automatically.
     """
-    return duckdb.connect(DB_FILE)
+    conn = duckdb.connect(DB_FILE)
+    return conn
 
 def init_db():
     """
-    Initializes default tables at startup.
+    Initializes default tables if they do not exist yet.
     """
     conn = get_db_connection()
+    # Example: Create a sample analytics/events table
     conn.execute("""
         CREATE TABLE IF NOT EXISTS metrics (
             id INTEGER PRIMARY KEY,
