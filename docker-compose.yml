@@ -18,13 +18,19 @@ services:
       - "6333:6333"
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: fastapi_backend
     ports:
       - "8000:8000"
     depends_on:
       - postgres
       - qdrant
+    environment:
+      PYTHONPATH: /app
+    volumes:
+    - ./data:/app/data
 
   frontend:
     build: ./frontend
